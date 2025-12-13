@@ -1,0 +1,16 @@
+# Learn more about working with Shopify TOML files with Gadget at https://docs.gadget.dev/guides/plugins/shopify/advanced-topics/shopify-app-toml
+
+client_id = "66a87e93c5879499da3a57f31eda361d"
+name = "refine-page-builder"
+application_url = "https://refine-page-builder.gadget.app/api/shopify/install-or-render"
+embedded = true
+
+[auth]
+redirect_urls = [ "https://refine-page-builder.gadget.app/api/connections/auth/shopify/callback" ]
+
+[webhooks]
+api_version = "2025-10"
+
+[[webhooks.subscriptions]]
+compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+uri = "https://refine-page-builder.gadget.app/api/webhooks/shopify"
