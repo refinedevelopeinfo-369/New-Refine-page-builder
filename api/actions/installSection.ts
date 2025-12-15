@@ -17,7 +17,7 @@ export const run = async ({ params, logger, api, connections }: any) => {
     throw new Error(`Section master not found: ${sectionSlug}`);
   }
 
-  // 現在公開されている「メインテーマ」のIDを探す
+  // ★テーマIDの取得（必須）
   const themes = await shopify.theme.list();
   const mainTheme = themes.find((t: any) => t.role === "main");
 
@@ -26,6 +26,7 @@ export const run = async ({ params, logger, api, connections }: any) => {
   }
 
   const themeId = mainTheme.id;
+logger.info({ themeId, role: mainTheme.role }, "Using Theme ID");
   const assetKey = `sections/${sectionSlug}.liquid`;
 
   // 2. ファイルの存在確認
@@ -35,14 +36,14 @@ export const run = async ({ params, logger, api, connections }: any) => {
       throw new Error("FILE_EXISTS");
     }
   } catch (error: any) {
-    // ▼▼▼ 【修正ポイント】エラー判定の書き方を修正 ▼▼▼
-    // Shopify API Nodeのエラーは error.response.statusCode に入っています
-    if (error.response?.statusCode === 404) {
-      // 404なら「ファイルがない」ということなので正常。処理を続行。
+    // 404エラー（ファイルがない）は正常なので無視して進む
+    if (error.response?.statusCode === 404 || error.code === 404) {
+      // OK
     } else if (error.message === "FILE_EXISTS") {
-      throw error; // 既に存在する場合はエラーを投げる
+      throw error; 
     } else {
-      throw error; // それ以外の本当のエラーは投げる
+      logger.error({ error }, "Unexpected error checking asset");
+      throw error; 
     }
   }
 
@@ -58,6 +59,7 @@ export const run = async ({ params, logger, api, connections }: any) => {
     shop: { _link: shop.id },
     section: { _link: sectionMaster.id },
     installedVersion: sectionMaster.version,
+    themeId: String(themeId),
   });
 
   return { success: true, message: "Installed successfully" };

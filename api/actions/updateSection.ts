@@ -9,13 +9,12 @@ export const run = async ({ params, logger, api, connections }: any) => {
 
   if (!sectionMaster) throw new Error("Section master not found");
 
-  // テーマID取得（共通化しても良いですが、一旦ここで取得）
+  // テーマID取得
   const themes = await shopify.theme.list();
   const mainTheme = themes.find((t: any) => t.role === "main");
   if (!mainTheme) throw new Error("Main theme not found");
   
   // 2. 強制上書き (shopify.asset.create を使用)
-  // ▼▼▼ 【修正ポイント】 assets.put -> asset.create ▼▼▼
   await shopify.asset.create(mainTheme.id, {
     key: `sections/${sectionSlug}.liquid`,
     value: sectionMaster.liquidCode,

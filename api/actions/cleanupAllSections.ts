@@ -21,7 +21,6 @@ export const run = async ({ params, logger, api, connections }: any) => {
   for (const install of installations) {
     if (install.section?.slug && mainTheme) {
       try {
-        // ▼▼▼ 【修正ポイント】 assets.delete -> asset.delete ▼▼▼
         await shopify.asset.delete(mainTheme.id, {
           asset: { key: `sections/${install.section.slug}.liquid` }
         });

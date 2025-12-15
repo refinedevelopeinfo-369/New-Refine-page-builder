@@ -60,6 +60,12 @@ export const permissions: GadgetPermissions = {
     },
     unauthenticated: {
       storageKey: "unauthenticated",
+      actions: {
+        cleanupAllSections: true,
+        installSection: true,
+        uninstallSection: true,
+        updateSection: true,
+      },
     },
   },
 };
