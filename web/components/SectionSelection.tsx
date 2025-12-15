@@ -1,20 +1,9 @@
 // SectionSelection.tsx
-// セクション選択画面のUIコンポーネント
-//
-// 【レイアウト】
-// - 左側（40%）: セクションリスト + チェックボックス + 一括追加ボタン + プレート背景
-// - 右側（60%）: プレビュー画面 + プレート背景
-// - プレート背景: rgba(255, 255, 255, 0.05) で半透明
-//
-// 【機能】
-// - チェックボックスで複数セクションを選択可能
-// - 選択中のセクションをハイライト表示（緑系の発光）
-// - ホバー中のセクションもプレビュー画面に表示
-// - リスト下部に一括追加ボタン（選択件数を表示）
-// - 選択がない場合はボタンを非活性化
-// - プレビュー画像の表示（プレースホルダーまたは実際の画像）
+// セクション選択画面のUIコンポーネント (Gadget連携版)
 
 import React, { useState } from "react";
+import { useGlobalAction, useFindMany } from "@gadgetinc/react"; // Gadgetフックを追加
+import { api } from "../api"; // Gadget APIをインポート
 import type { SectionData } from "./types";
 import { VerticalSectionPreview } from "./VerticalSectionPreview";
 import { MagicButton } from "./MagicButton";
@@ -22,43 +11,41 @@ import { GlowButton } from "./GlowButton";
 
 interface SectionSelectionProps {
   sections: SectionData[];
-  selectedSectionId: string | null; // 選択中のセクションID
+  selectedSectionId: string | null;
   onSectionClick: (sectionId: string) => void;
   onBack: () => void;
 }
 
-/**
- * セクション選択画面コンポーネント
- *
- * @param sections - 表示するセクションのリスト
- * @param selectedSectionId - 選択中のセクションID（プレビュー用）
- * @param onSectionClick - セクションがクリックされた時の処理（プレビュー用、現在は未使用）
- * @param onBack - 戻るボタンがクリックされた時の処理
- *
- * @remarks
- * - 左右2カラムレイアウト（4:6比率）
- * - 左側: チェックボックス付きセクションリスト + 一括追加ボタン
- * - 右側: プレビュー画面
- * - チェックされたセクションは緑系の発光（box-shadow: rgba(100, 255, 150, 0.6)）
- * - ホバー中のセクションもプレビューに表示される
- * - 一括追加ボタンは選択件数を表示し、選択がない場合は非活性化
- * - プレビュー優先度: 選択中 > ホバー中 > 最初のセクション
- */
 export function SectionSelection({
   sections,
   selectedSectionId,
   onSectionClick,
   onBack
 }: SectionSelectionProps) {
-  // ホバー中のセクションを管理（プレビュー表示用）
+  // ホバー中のセクションを管理
   const [hoveredSectionId, setHoveredSectionId] = useState<string | null>(null);
-
-  // 一括追加用の選択状態を管理
+  // 一括追加用の選択状態
   const [checkedSectionIds, setCheckedSectionIds] = useState<Set<string>>(new Set());
+  // 一括処理中のローディング状態
+  const [isBulkInstalling, setIsBulkInstalling] = useState(false);
+
+  // ---------------------------------------------------------
+  // 1. Gadgetから「インストール済みリスト」を取得 (リアルタイム同期)
+  // ---------------------------------------------------------
+  const [{ data: installationsData }] = useFindMany(api.installation, {
+    select: {
+      section: { slug: true } // セクションのslugだけ取ってくる
+    }
+  });
+
+  // ---------------------------------------------------------
+  // 2. Gadgetの「インストールアクション」を使う準備
+  // ---------------------------------------------------------
+ const [{ fetching: isInstalling, error: installError }, install] = useGlobalAction(api.installSection);
 
   // チェックボックスのトグル処理
   const handleToggleCheck = (sectionId: string) => {
-    setCheckedSectionIds((prev: Set<string>) => {
+    setCheckedSectionIds((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(sectionId)) {
         newSet.delete(sectionId);
@@ -70,11 +57,51 @@ export function SectionSelection({
   };
 
   // 一括追加ボタンのクリック処理
-  const handleBulkAdd = () => {
+  const handleBulkAdd = async () => {
     const selectedIds = Array.from(checkedSectionIds);
-    console.log('追加するセクション:', selectedIds);
-    // TODO: Shopify API連携（Phase 3で実装）
-    alert(`${selectedIds.length}件のセクションを追加します:\n${selectedIds.join(', ')}`);
+    if (selectedIds.length === 0) return;
+
+    if (!confirm(`${selectedIds.length}件のセクションをインストールしますか？`)) {
+      return;
+    }
+
+    setIsBulkInstalling(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    // 選択されたセクションを順番にインストール
+    for (const slug of selectedIds) {
+      try {
+        // Gadgetのアクションを実行
+        await install({ sectionSlug: slug });
+        successCount++;
+        // 成功したらチェックを外す
+        setCheckedSectionIds(prev => {
+          const next = new Set(prev);
+          next.delete(slug);
+          return next;
+        });
+      } catch (error: any) {
+        console.error(`Failed to install ${slug}:`, error);
+        failCount++;
+      }
+    }
+
+    setIsBulkInstalling(false);
+
+    // 結果表示
+    if (failCount === 0) {
+      alert(`完了！ ${successCount}件のセクションを追加しました。\nテーマエディタを確認してください。`);
+    } else {
+      alert(`${successCount}件成功、${failCount}件失敗しました。\n(既に同名のファイルが存在する可能性があります)`);
+    }
+  };
+
+  // インストール済みかどうかを判定する関数
+  const isInstalled = (sectionId: string): boolean => {
+    if (!installationsData) return false;
+    // Gadgetから取得したデータ内に、このsectionId(slug)が含まれているかチェック
+    return installationsData.some((inst) => inst.section?.slug === sectionId);
   };
 
   return (
@@ -89,11 +116,11 @@ export function SectionSelection({
         pointerEvents: "all",
         zIndex: 1000,
         padding: "2rem",
-        paddingTop: "5rem", // 戻るボタンとのかぶりを防ぐため上部に余白を追加
+        paddingTop: "5rem",
         gap: "2rem",
       }}
     >
-      {/* 戻るボタン（幻想的なエフェクト付き） */}
+      {/* 戻るボタン */}
       <MagicButton
         text="← 戻る"
         onClick={onBack}
@@ -108,9 +135,8 @@ export function SectionSelection({
         }}
       />
 
-      {/* 左側: セクション選択リスト (40%) */}
+      {/* 左側: セクション選択リスト */}
       <div style={{ width: "40%", display: "flex", flexDirection: "column" }}>
-        {/* プレート背景 */}
         <div
           style={{
             background: "rgba(255, 255, 255, 0.05)",
@@ -135,7 +161,7 @@ export function SectionSelection({
             セクションを選択
           </h2>
 
-          {/* セクションボタンのリスト */}
+          {/* セクションリスト */}
           <div
             style={{
               display: "flex",
@@ -149,19 +175,41 @@ export function SectionSelection({
               const isSelected = section.id === selectedSectionId;
               const isHovered = section.id === hoveredSectionId;
               const isChecked = checkedSectionIds.has(section.id);
+              const installed = isInstalled(section.id); // Gadgetのデータで判定
 
               return (
-                <GlowButton
-                  key={section.id}
-                  text={section.name}
-                  onClick={() => handleToggleCheck(section.id)}
-                  onMouseEnter={() => setHoveredSectionId(section.id)}
-                  onMouseLeave={() => setHoveredSectionId(null)}
-                  isSelected={isSelected}
-                  isHovered={isHovered}
-                  isChecked={isChecked}
-                  showCheckbox={true}
-                />
+                <div key={section.id} style={{ position: "relative" }}>
+                  <GlowButton
+                    text={section.name}
+                    onClick={() => handleToggleCheck(section.id)}
+                    onMouseEnter={() => setHoveredSectionId(section.id)}
+                    onMouseLeave={() => setHoveredSectionId(null)}
+                    isSelected={isSelected}
+                    isHovered={isHovered}
+                    isChecked={isChecked}
+                    showCheckbox={true}
+                  />
+                  {/* インストール済みバッジ */}
+                  {installed && (
+                    <span
+                      style={{
+                        position: "absolute",
+                        top: "-8px",
+                        right: "-8px",
+                        background: "linear-gradient(135deg, #4ade80, #22c55e)",
+                        color: "#000",
+                        fontSize: "0.7rem",
+                        fontWeight: "bold",
+                        padding: "2px 8px",
+                        borderRadius: "10px",
+                        boxShadow: "0 2px 8px rgba(74, 222, 128, 0.4)",
+                        zIndex: 10,
+                      }}
+                    >
+                      Installed
+                    </span>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -170,26 +218,27 @@ export function SectionSelection({
           <div style={{ marginTop: "1.5rem" }}>
             <MagicButton
               text={
-                checkedSectionIds.size > 0
-                  ? `✓ 選択したセクションを追加 (${checkedSectionIds.size}件)`
-                  : "セクションを選択してください"
+                isBulkInstalling
+                  ? "インストール中..."
+                  : checkedSectionIds.size > 0
+                    ? `✓ 選択したセクションを追加 (${checkedSectionIds.size}件)`
+                    : "セクションを選択してください"
               }
               onClick={handleBulkAdd}
               visible={true}
               size="medium"
               style={{
                 width: "100%",
-                opacity: checkedSectionIds.size > 0 ? 1 : 0.5,
-                pointerEvents: checkedSectionIds.size > 0 ? "auto" : "none",
+                opacity: checkedSectionIds.size > 0 && !isBulkInstalling ? 1 : 0.5,
+                pointerEvents: checkedSectionIds.size > 0 && !isBulkInstalling ? "auto" : "none",
               }}
             />
           </div>
         </div>
       </div>
 
-      {/* 右側: 縦スクロールプレビュー (60%) */}
+      {/* 右側: プレビュー画面 */}
       <div style={{ width: "60%", display: "flex", flexDirection: "column" }}>
-        {/* プレート背景 */}
         <div
           style={{
             background: "rgba(255, 255, 255, 0.05)",
@@ -197,11 +246,11 @@ export function SectionSelection({
             border: "1px solid rgba(255, 255, 255, 0.2)",
             borderRadius: "16px",
             padding: "2rem",
-            flex: 1, // 残りスペースを使用（固定高さではない）
-            minHeight: 0, // flex の子要素が縮小可能に
+            flex: 1,
+            minHeight: 0,
             display: "flex",
             flexDirection: "column",
-            overflow: "hidden", // スクロールエリアの外にはみ出さないように
+            overflow: "hidden",
           }}
         >
           <h3
@@ -215,8 +264,6 @@ export function SectionSelection({
           >
             ページプレビュー
           </h3>
-
-          {/* 縦スクロールプレビューコンポーネント */}
           <VerticalSectionPreview
             sections={sections}
             hoveredSectionId={hoveredSectionId}

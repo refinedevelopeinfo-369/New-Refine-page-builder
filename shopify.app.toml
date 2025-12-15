@@ -14,3 +14,6 @@ api_version = "2025-10"
 [[webhooks.subscriptions]]
 compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
 uri = "https://refine-page-builder.gadget.app/api/webhooks/shopify"
+
+[access_scopes]
+scopes = "write_products,read_products,write_themes,read_themes"

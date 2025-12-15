@@ -12,6 +12,12 @@ export const permissions: GadgetPermissions = {
     "shopify-app-users": {
       storageKey: "Role-Shopify-App",
       models: {
+        installation: {
+          read: true,
+        },
+        sectionMaster: {
+          read: true,
+        },
         shopifyGdprRequest: {
           read: {
             filter:
@@ -44,6 +50,12 @@ export const permissions: GadgetPermissions = {
             run: true,
           },
         },
+      },
+      actions: {
+        cleanupAllSections: true,
+        installSection: true,
+        uninstallSection: true,
+        updateSection: true,
       },
     },
     unauthenticated: {
