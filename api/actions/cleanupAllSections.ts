@@ -1,9 +1,10 @@
-// api/actions/cleanupAllSections.ts
-// アプリアンインストール前の全セクション削除用Global Action
-
 export const run = async ({ params, logger, api, connections }: any) => {
   const shopify = connections.shopify.current;
   const currentShop = await api.shopifyShop.findOne(shopify.id);
+
+  // テーマID取得
+  const themes = await shopify.theme.list();
+  const mainTheme = themes.find((t: any) => t.role === "main");
 
   // 1. このショップのインストール履歴を全取得
   const installations = await api.installation.findMany({
@@ -18,10 +19,11 @@ export const run = async ({ params, logger, api, connections }: any) => {
 
   // 2. ループして削除実行
   for (const install of installations) {
-    if (install.section?.slug) {
+    if (install.section?.slug && mainTheme) {
       try {
-        await shopify.assets.delete({
-          key: `sections/${install.section.slug}.liquid`,
+        // ▼▼▼ 【修正ポイント】 assets.delete -> asset.delete ▼▼▼
+        await shopify.asset.delete(mainTheme.id, {
+          asset: { key: `sections/${install.section.slug}.liquid` }
         });
       } catch (e) {
         // 無視して次へ

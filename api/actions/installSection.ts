@@ -17,38 +17,36 @@ export const run = async ({ params, logger, api, connections }: any) => {
     throw new Error(`Section master not found: ${sectionSlug}`);
   }
 
-  // ★追加: 現在公開されている「メインテーマ」のIDを探す
+  // 現在公開されている「メインテーマ」のIDを探す
   const themes = await shopify.theme.list();
-  // roleが 'main' のものが公開テーマです
   const mainTheme = themes.find((t: any) => t.role === "main");
 
   if (!mainTheme) {
     throw new Error("Main theme not found");
   }
 
-  const themeId = mainTheme.id; // これを使います！
+  const themeId = mainTheme.id;
   const assetKey = `sections/${sectionSlug}.liquid`;
 
-  // 2. ファイルの存在確認 (テーマIDを指定して確認)
+  // 2. ファイルの存在確認
   try {
     const existingAsset = await shopify.asset.get(themeId, { asset: { key: assetKey } });
     if (existingAsset) {
-      // 既にファイルがある場合はエラー (上書き確認用)
       throw new Error("FILE_EXISTS");
     }
   } catch (error: any) {
-    // 404 (存在しない) ならOK
-    if (error.code !== 404 && error.message !== "FILE_EXISTS") {
-      // 本物のエラーならログに出してスロー
-      logger.error({ error }, "Error checking asset existence");
-      // 404扱いで無視できるケースか判断が難しい場合は一旦スルーしてPUTへ進む手もあるが、
-      // ここではFILE_EXISTS以外は続行させる
+    // ▼▼▼ 【修正ポイント】エラー判定の書き方を修正 ▼▼▼
+    // Shopify API Nodeのエラーは error.response.statusCode に入っています
+    if (error.response?.statusCode === 404) {
+      // 404なら「ファイルがない」ということなので正常。処理を続行。
+    } else if (error.message === "FILE_EXISTS") {
+      throw error; // 既に存在する場合はエラーを投げる
+    } else {
+      throw error; // それ以外の本当のエラーは投げる
     }
-    if (error.message === "FILE_EXISTS") throw error;
   }
 
-  // 3. ファイルを書き込む (テーマIDを指定してPUT)
-  // ※ Shopify API Nodeの書き方に準拠
+  // 3. ファイルを書き込む
   await shopify.asset.create(themeId, {
     key: assetKey,
     value: sectionMaster.liquidCode || "",

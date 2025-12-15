@@ -1,6 +1,3 @@
-// api/actions/updateSection.ts
-// インストール済みセクションを最新バージョンに更新するGlobal Action
-
 export const run = async ({ params, logger, api, connections }: any) => {
   const { sectionSlug } = params;
   const shopify = connections.shopify.current;
@@ -12,14 +9,19 @@ export const run = async ({ params, logger, api, connections }: any) => {
 
   if (!sectionMaster) throw new Error("Section master not found");
 
-  // 2. 強制上書き (JSONはtemplates側にあるので、sectionsフォルダを上書きしても安全)
-  await shopify.assets.put({
+  // テーマID取得（共通化しても良いですが、一旦ここで取得）
+  const themes = await shopify.theme.list();
+  const mainTheme = themes.find((t: any) => t.role === "main");
+  if (!mainTheme) throw new Error("Main theme not found");
+  
+  // 2. 強制上書き (shopify.asset.create を使用)
+  // ▼▼▼ 【修正ポイント】 assets.put -> asset.create ▼▼▼
+  await shopify.asset.create(mainTheme.id, {
     key: `sections/${sectionSlug}.liquid`,
     value: sectionMaster.liquidCode,
   });
 
   // 3. 履歴データのバージョンを更新
-  // (現在のショップが持っている該当セクションのレコードを探して更新)
   const currentShop = await api.shopifyShop.findOne(shopify.id);
   const installation = await api.installation.findFirst({
     filter: {

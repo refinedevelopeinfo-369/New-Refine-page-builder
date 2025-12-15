@@ -1,15 +1,21 @@
-// api/actions/uninstallSection.ts
-// 単一セクションをアンインストールするGlobal Action
-
 export const run = async ({ params, logger, api, connections }: any) => {
   const { sectionSlug } = params;
   const shopify = connections.shopify.current;
 
-  // 1. Asset APIでファイルを削除
-  try {
-    await shopify.assets.delete({ key: `sections/${sectionSlug}.liquid` });
-  } catch (e) {
-    logger.warn("File already deleted or not found");
+  // テーマID取得
+  const themes = await shopify.theme.list();
+  const mainTheme = themes.find((t: any) => t.role === "main");
+  
+  if (mainTheme) {
+    // 1. Asset APIでファイルを削除
+    try {
+      // ▼▼▼ 【修正ポイント】 assets.delete -> asset.delete, 引数の形式変更 ▼▼▼
+      await shopify.asset.delete(mainTheme.id, { 
+        asset: { key: `sections/${sectionSlug}.liquid` } 
+      });
+    } catch (e) {
+      logger.warn("File already deleted or not found");
+    }
   }
 
   // 2. 履歴データを削除
