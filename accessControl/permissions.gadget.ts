@@ -14,6 +14,11 @@ export const permissions: GadgetPermissions = {
       models: {
         installation: {
           read: true,
+          actions: {
+            create: true,
+            delete: true,
+            update: true,
+          },
         },
         sectionMaster: {
           read: true,
@@ -25,6 +30,16 @@ export const permissions: GadgetPermissions = {
           },
           actions: {
             create: true,
+            update: true,
+          },
+        },
+        shopifyPage: {
+          read: {
+            filter: "accessControl/filters/shopify/shopifyPage.gelly",
+          },
+          actions: {
+            create: true,
+            delete: true,
             update: true,
           },
         },
@@ -50,22 +65,21 @@ export const permissions: GadgetPermissions = {
             run: true,
           },
         },
-      },
-      actions: {
-        cleanupAllSections: true,
-        installSection: true,
-        uninstallSection: true,
-        updateSection: true,
+        shopifyTheme: {
+          read: {
+            filter:
+              "accessControl/filters/shopify/shopifyTheme.gelly",
+          },
+          actions: {
+            create: true,
+            delete: true,
+            update: true,
+          },
+        },
       },
     },
     unauthenticated: {
       storageKey: "unauthenticated",
-      actions: {
-        cleanupAllSections: true,
-        installSection: true,
-        uninstallSection: true,
-        updateSection: true,
-      },
     },
   },
 };

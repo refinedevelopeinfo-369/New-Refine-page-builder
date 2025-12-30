@@ -80,6 +80,7 @@ export const schema: GadgetModel = {
         filterIndex: false,
         searchIndex: false,
       },
+      pages: true,
       passwordEnabled: { filterIndex: false, searchIndex: false },
       phone: { filterIndex: false },
       plan: true,
@@ -105,6 +106,7 @@ export const schema: GadgetModel = {
       syncs: true,
       taxShipping: { filterIndex: false, searchIndex: false },
       taxesIncluded: { filterIndex: false, searchIndex: false },
+      themes: true,
       timezone: { filterIndex: false, searchIndex: false },
       timezoneAbbreviation: {
         filterIndex: false,

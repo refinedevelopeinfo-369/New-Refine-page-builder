@@ -73,7 +73,7 @@ export function SectionSelection({
     for (const slug of selectedIds) {
       try {
         // Gadgetのアクションを実行
-        await install({ sectionSlug: slug });
+        await install({ sectionSlug: slug }as any);
         successCount++;
         // 成功したらチェックを外す
         setCheckedSectionIds(prev => {

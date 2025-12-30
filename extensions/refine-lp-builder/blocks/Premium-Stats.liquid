@@ -1,0 +1,404 @@
+{{ 'premium-landing-styles.css' | asset_url | stylesheet_tag }}
+
+<section class="premium-section premium-bg-gradient" style="position: relative; overflow: hidden; background: transparent;">
+  
+  <!-- Background Pattern -->
+  <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.03; background-image: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.4"><circle cx="30" cy="30" r="1.5"/></g></svg>'); background-repeat: repeat;"></div>
+  
+  <div class="premium-container">
+    
+    <!-- Section Header -->
+    <div style="text-align: center; margin-bottom: 80px;">
+      {% if section.settings.eyebrow_text != blank %}
+        <p class="premium-text premium-animate fade-in-up" style="color: var(--premium-accent); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px;">
+          {{ section.settings.eyebrow_text }}
+        </p>
+      {% endif %}
+      
+      <h2 class="premium-subheading premium-animate fade-in-up delay-1">
+        {{ section.settings.heading | default: "数字で見る実績" }}
+      </h2>
+      
+      {% if section.settings.description != blank %}
+        <p class="premium-text-large premium-animate fade-in-up delay-2" style="max-width: 600px; margin: 0 auto;">
+          {{ section.settings.description }}
+        </p>
+      {% endif %}
+    </div>
+    
+    <!-- Stats Grid -->
+    <div class="premium-grid {% if section.blocks.size <= 2 %}premium-grid-2{% elsif section.blocks.size == 3 %}premium-grid-3{% else %}premium-grid-4{% endif %} premium-animate fade-in-up delay-3" 
+         style="gap: 40px;" data-stagger="150">
+      
+      {% for block in section.blocks %}
+        <div class="premium-card premium-stats-card" 
+             style="text-align: center; padding: 60px 30px; position: relative; background: var(--premium-bg-secondary); border: 1px solid rgba(255, 107, 53, 0.15); opacity: 0; transform: translateY(30px); transition: all 0.3s ease;"
+             data-animation-delay="{{ forloop.index0 | times: 200 }}"
+             {{ block.shopify_attributes }}>
+          
+          <!-- Icon -->
+          {% if block.settings.icon_image != blank %}
+            <div style="margin-bottom: 30px;">
+              <img src="{{ block.settings.icon_image | img_url: '80x80' }}" 
+                   alt="{{ block.settings.stat_label }}" 
+                   style="width: 60px; height: 60px; object-fit: contain; margin: 0 auto; filter: brightness(0) invert(1) sepia(1) saturate(5) hue-rotate({{ forloop.index | times: 60 }}deg);">
+            </div>
+          {% elsif block.settings.icon_svg != blank %}
+            <div style="margin-bottom: 30px; color: var(--premium-accent);">
+              {{ block.settings.icon_svg }}
+            </div>
+          {% else %}
+            <!-- Default icons based on index -->
+            <div style="margin-bottom: 30px;">
+              {% case forloop.index %}
+                {% when 1 %}
+                  <div style="color: var(--premium-accent); display: inline-block;">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none">
+                      <path d="M16 21V19C16 17.9391 15.5786 16.9217 14.8284 16.1716C14.0783 15.4214 13.0609 15 12 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21M20 8V21M23 11L20 8L17 11M12.5 7C12.5 9.20914 10.7091 11 8.5 11C6.29086 11 4.5 9.20914 4.5 7C4.5 4.79086 6.29086 3 8.5 3C10.7091 3 12.5 4.79086 12.5 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
+                {% when 2 %}
+                  <div style="color: var(--premium-gold); display: inline-block;">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 2L15.09 8.26L22 9L16 14.74L17.18 21.5L12 18.77L6.82 21.5L8 14.74L2 9L8.91 8.26L12 2Z" fill="currentColor"/>
+                    </svg>
+                  </div>
+                {% when 3 %}
+                  <div style="color: var(--premium-accent); display: inline-block;">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none">
+                      <path d="M3 12L5 10L12 17L22 7L20 5L12 13L3 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="currentColor"/>
+                    </svg>
+                  </div>
+                {% when 4 %}
+                  <div style="color: var(--premium-gold); display: inline-block;">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 2V6.5L16 12L12 17.5V22L20 12L12 2ZM2 12L10 2V6.5L6 12L10 17.5V22L2 12Z" fill="currentColor"/>
+                    </svg>
+                  </div>
+                {% else %}
+                  <div style="color: var(--premium-accent); display: inline-block;">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </div>
+              {% endcase %}
+            </div>
+          {% endif %}
+          
+          <!-- Animated Number -->
+          <div class="premium-stat-number" 
+               style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800; line-height: 1; margin-bottom: 16px; background: linear-gradient(135deg, var(--premium-accent) 0%, var(--premium-gold) 100%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;" 
+               data-counter="{{ block.settings.stat_number | default: 0 }}" 
+               data-duration="{{ block.settings.animation_duration | default: 2000 }}"
+               data-prefix="{{ block.settings.stat_prefix }}" 
+               data-suffix="{{ block.settings.stat_suffix }}">
+            {{ block.settings.stat_prefix }}0{{ block.settings.stat_suffix }}
+          </div>
+          
+          <!-- Label -->
+          <h3 style="font-size: 1.25rem; font-weight: 600; color: var(--premium-text-primary); margin-bottom: 12px; line-height: 1.3;">
+            {{ block.settings.stat_label | default: 'ラベル' }}
+          </h3>
+          
+          <!-- Description -->
+          {% if block.settings.stat_description != blank %}
+            <p class="premium-text" style="margin: 0; line-height: 1.5; opacity: 0.9;">
+              {{ block.settings.stat_description }}
+            </p>
+          {% endif %}
+          
+          <!-- Progress Bar (optional) -->
+          {% if block.settings.show_progress and block.settings.progress_value != blank %}
+            <div style="margin-top: 24px;">
+              <div class="premium-progress-container" style="background: rgba(255, 107, 53, 0.2); height: 8px; border-radius: 4px; overflow: hidden; position: relative;">
+                <div class="premium-progress-bar" 
+                     style="background: linear-gradient(90deg, var(--premium-accent), var(--premium-gold)); height: 100%; width: 0%; border-radius: 4px; position: relative; transition: width 2s cubic-bezier(0.25, 0.46, 0.45, 0.94);" 
+                     data-progress="{{ block.settings.progress_value }}">
+                  <div class="progress-glow" style="position: absolute; top: 0; right: -2px; width: 4px; height: 100%; background: rgba(255, 255, 255, 0.8); border-radius: 2px; opacity: 0;"></div>
+                </div>
+              </div>
+              <p style="font-size: 0.85rem; color: var(--premium-text-secondary); margin: 8px 0 0; text-align: right;">
+                <span class="progress-counter" data-target="{{ block.settings.progress_value }}">0</span>%
+              </p>
+            </div>
+          {% endif %}
+          
+          <!-- Decorative Corner -->
+          <div style="position: absolute; top: 0; right: 0; width: 40px; height: 40px; background: linear-gradient(135deg, var(--premium-accent), var(--premium-gold)); opacity: 0.1; clip-path: polygon(100% 0%, 0% 100%, 100% 100%);"></div>
+          
+        </div>
+      {% endfor %}
+      
+    </div>
+    
+    <!-- Additional Info Section -->
+    {% if section.settings.show_additional_info %}
+      <div class="premium-animate fade-in-up delay-4" style="margin-top: 80px; text-align: center;">
+        <div style="background: var(--premium-bg-secondary); border-radius: var(--premium-border-radius); padding: 50px; border: 1px solid rgba(255, 107, 53, 0.15); position: relative; overflow: hidden;">
+          
+          <!-- Background decoration -->
+          <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: linear-gradient(135deg, var(--premium-accent), var(--premium-gold)); border-radius: 50%; opacity: 0.1; animation: float 8s ease-in-out infinite;"></div>
+          <div style="position: absolute; bottom: -30px; left: -30px; width: 60px; height: 60px; background: linear-gradient(135deg, var(--premium-gold), var(--premium-accent)); border-radius: 50%; opacity: 0.1; animation: float 6s ease-in-out infinite reverse;"></div>
+          
+          {% if section.settings.additional_heading != blank %}
+            <h3 style="font-size: 1.5rem; font-weight: 600; color: var(--premium-text-primary); margin-bottom: 20px;">
+              {{ section.settings.additional_heading }}
+            </h3>
+          {% endif %}
+          
+          {% if section.settings.additional_text != blank %}
+            <p class="premium-text-large" style="margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto;">
+              {{ section.settings.additional_text }}
+            </p>
+          {% endif %}
+          
+          {% if section.settings.additional_cta_text != blank %}
+            <a href="{{ section.settings.additional_cta_url | default: '#' }}" class="premium-btn">
+              {{ section.settings.additional_cta_text }}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-left: 8px;">
+                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+          {% endif %}
+          
+        </div>
+      </div>
+    {% endif %}
+    
+  </div>
+</section>
+
+<style>
+/* Stats specific animations */
+@keyframes countUp {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes progressGlow {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+.premium-stat-number {
+  animation: countUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.5s;
+  opacity: 0;
+}
+
+.premium-stats-card {
+  transition: all 0.3s ease;
+}
+
+.premium-stats-card.animate-in {
+  animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.premium-progress-bar.animate {
+  transition: width 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.premium-progress-bar.animate .progress-glow {
+  animation: progressGlow 2s ease-in-out;
+  animation-delay: 1s;
+}
+
+/* Progress bar animation */
+.premium-progress-bar {
+  position: relative;
+}
+
+@keyframes progressGrow {
+  from { width: 0%; }
+  to { width: var(--progress-width); }
+}
+
+/* Card hover effects */
+.premium-stats .premium-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  border-color: var(--premium-accent);
+  box-shadow: 0 20px 40px rgba(255, 107, 53, 0.15);
+}
+
+.premium-stats .premium-card:hover .premium-stat-number {
+  transform: scale(1.05);
+}
+
+.premium-stats .premium-card:active {
+  transform: translateY(-2px) scale(1.01);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .premium-stats .premium-card {
+    padding: 40px 20px !important;
+  }
+  
+  .premium-stat-number {
+    font-size: 2.5rem !important;
+  }
+}
+
+/* Staggered entrance animations */
+.premium-stats [data-stagger] > * {
+  animation-delay: calc(var(--stagger-delay, 0) * 0.15s);
+}
+
+/* Floating animation for decorative elements */
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg); 
+  }
+  33% { 
+    transform: translateY(-10px) rotate(5deg); 
+  }
+  66% { 
+    transform: translateY(5px) rotate(-3deg); 
+  }
+}
+</style>
+
+{{ 'premium-landing-scripts.js' | asset_url | script_tag }}
+
+<script>
+// Enhanced stats animations
+document.addEventListener('DOMContentLoaded', function() {
+  // Staggered card animations
+  const statsCards = document.querySelectorAll('.premium-stats-card');
+  
+  const cardObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const card = entry.target;
+        const delay = parseInt(card.dataset.animationDelay) || 0;
+        
+        setTimeout(() => {
+          card.classList.add('animate-in');
+          
+          // Animate progress bar if exists
+          const progressBar = card.querySelector('[data-progress]');
+          if (progressBar) {
+            const progressContainer = progressBar.closest('.premium-progress-container');
+            const progressCounter = card.querySelector('.progress-counter');
+            const targetWidth = progressBar.dataset.progress;
+            
+            setTimeout(() => {
+              progressBar.classList.add('animate');
+              progressBar.style.width = targetWidth + '%';
+              
+              // Animate progress counter
+              if (progressCounter) {
+                animateCounter(progressCounter, 0, parseInt(targetWidth), 2000);
+              }
+            }, 800);
+          }
+        }, delay);
+        
+        cardObserver.unobserve(card);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  statsCards.forEach(card => {
+    cardObserver.observe(card);
+  });
+  
+  // Counter animation function
+  function animateCounter(element, start, end, duration) {
+    const startTime = performance.now();
+    
+    function updateCounter(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing function
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+      const current = Math.floor(start + (end - start) * easeOutQuart);
+      
+      element.textContent = current;
+      
+      if (progress < 1) {
+        requestAnimationFrame(updateCounter);
+      } else {
+        element.textContent = end;
+      }
+    }
+    
+    requestAnimationFrame(updateCounter);
+  }
+});
+</script>
+
+{% schema %}
+{
+  "name": "Premium Stats",
+  "target": "section",
+  "tag": "section",
+  "class": "premium-stats",
+  "settings": [
+    {
+      "type": "header",
+      "content": "セクション設定"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow_text",
+      "label": "アイブロウテキスト",
+      "default": "OUR ACHIEVEMENTS"
+    },
+    {
+      "type": "textarea",
+      "id": "heading",
+      "label": "見出し",
+      "default": "数字で見る実績"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "説明文",
+      "default": "私たちの成果と実績を具体的な数字でご紹介します。"
+    },
+    {
+      "type": "header",
+      "content": "追加情報セクション"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_additional_info",
+      "label": "追加情報セクションを表示",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "additional_heading",
+      "label": "追加セクション見出し"
+    },
+    {
+      "type": "textarea",
+      "id": "additional_text",
+      "label": "追加セクションテキスト"
+    },
+    {
+      "type": "text",
+      "id": "additional_cta_text",
+      "label": "追加セクションCTAテキスト"
+    },
+    {
+      "type": "url",
+      "id": "additional_cta_url",
+      "label": "追加セクションCTAリンク"
+    }
+  ],
+}
+{% endschema %}

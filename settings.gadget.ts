@@ -7,9 +7,14 @@ export const settings: GadgetSettings = {
     connections: {
       shopify: {
         apiVersion: "2025-10",
-        enabledModels: [],
+        enabledModels: ["shopifyPage", "shopifyTheme"],
         type: "partner",
-        scopes: ["read_themes", "write_themes"],
+        scopes: [
+          "read_themes",
+          "write_themes",
+          "read_content",
+          "write_content",
+        ],
       },
     },
   },
